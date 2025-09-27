@@ -6,21 +6,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
+
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-
-      - name: Free Disk Space (Ubuntu) # optional
-        if: ${{ false }}
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: true
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: false
 
       - name: Set Swap Space
         uses: pierotofy/set-swap-space@master
@@ -56,11 +45,6 @@ jobs:
         run: |
           chmod +x build.sh
           ./build.sh
-
-      - name: Compress kernel image
-        run: |
-          cd build
-          gzip -9 -c Image > Image.gz
 
       - name: Upload Kernel Image
         uses: actions/upload-artifact@v4
