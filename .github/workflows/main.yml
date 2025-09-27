@@ -46,12 +46,12 @@ jobs:
             gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
       - name: Download Slim LLVM 21.1.2
-  run: |
-    mkdir -p $HOME/toolchains/llvm-21
-    cd $HOME/toolchains/llvm-21
-    wget -q https://mirrors.edge.kernel.org/pub/tools/llvm/files/llvm-21.1.2-x86_64.tar.gz
-    tar -xzf llvm-21.1.2-x86_64.tar.gz --strip-components=1
-    echo "PATH=$HOME/toolchains/llvm-21/bin:$PATH" >> $GITHUB_ENV
+        run: |
+          mkdir -p $HOME/toolchains/llvm-21
+          cd $HOME/toolchains/llvm-21
+          wget -q https://mirrors.edge.kernel.org/pub/tools/llvm/files/llvm-21.1.2-x86_64.tar.gz
+          tar -xzf llvm-21.1.2-x86_64.tar.gz --strip-components=1
+          echo "$HOME/toolchains/llvm-21/bin" >> $GITHUB_PATH
 
       - name: Run build script
         run: |
