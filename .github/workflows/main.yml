@@ -6,48 +6,121 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    timeout-minutes: 240
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Set Swap Space
+      - name: Set Swap Space (7 GB)
         uses: pierotofy/set-swap-space@master
         with:
           swap-size-gb: 7
 
-      - name: Include KernelSU-Next
-        run: |
-          cd $GITHUB_WORKSPACE
-          rm -rf KernelSU 2>/dev/null || true
-          if ! curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/main/kernel/setup.sh" | bash - ; then
-            curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -
-          fi
-
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends \
             git wget curl make gcc g++ bc bison flex \
             libssl-dev libncurses5-dev libncursesw5-dev \
             python3 unzip device-tree-compiler \
-            gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
+            gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi \
+            file xz-utils ca-certificates
 
-      - name: Download Slim LLVM 21.1.2
+      - name: Download LLVM 21.1.2 (full x86_64)
+        id: download_llvm
         run: |
+          set -eux
           mkdir -p $HOME/toolchains/llvm-21
           cd $HOME/toolchains/llvm-21
-          wget -q https://mirrors.edge.kernel.org/pub/tools/llvm/files/llvm-21.1.2-x86_64.tar.gz
-          tar -xzf llvm-21.1.2-x86_64.tar.gz --strip-components=1
-          echo "PATH=$HOME/toolchains/llvm-21/bin:$PATH" >> $GITHUB_ENV
+          # gunakan build x86_64 (runner is x86_64)
+          URL=https://mirrors.edge.kernel.org/pub/tools/llvm/files/llvm-21.1.2-x86_64.tar.xz
+          echo "Downloading $URL"
+          curl -fSL "$URL" -o llvm-21.1.2-x86_64.tar.xz
+          tar -xJf llvm-21.1.2-x86_64.tar.xz --strip-components=1
+          # add to PATH for remaining steps
+          echo "$HOME/toolchains/llvm-21/bin" >> $GITHUB_PATH
+          # also expose useful tools
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "LD=ld.lld" >> $GITHUB_ENV
+          echo "AR=llvm-ar" >> $GITHUB_ENV
+          echo "NM=llvm-nm" >> $GITHUB_ENV
+          echo "OBJCOPY=llvm-objcopy" >> $GITHUB_ENV
+          echo "OBJDUMP=llvm-objdump" >> $GITHUB_ENV
+          echo "READELF=llvm-readelf" >> $GITHUB_ENV
+          echo "STRIP=llvm-strip" >> $GITHUB_ENV
 
-      - name: Run build script
+      - name: Toolchain diagnostics
+        run: |
+          echo "uname -m: $(uname -m)"
+          command -v clang || true
+          clang --version | head -n1 || true
+          command -v ld.lld || true
+          if command -v ld.lld >/dev/null 2>&1; then
+            file $(command -v ld.lld) || true
+          else
+            echo "ld.lld not found"
+          fi
+          ls -la $HOME/toolchains/llvm-21/bin | head -n50
+
+      - name: Ensure fallback clang/lld (apt) if missing
+        run: |
+          # if clang missing or ld.lld is not runnable for this host, install apt packages
+          if ! command -v clang >/dev/null 2>&1; then
+            sudo apt-get install -y clang lld
+          else
+            # check ld.lld binary architecture; fall back if it looks wrong
+            LD_BIN=$(command -v ld.lld || true)
+            if [ -n "$LD_BIN" ]; then
+              fileout=$(file -b "$LD_BIN" || true)
+              hostarch=$(uname -m)
+              if echo "$hostarch" | grep -q "x86"; then
+                if ! echo "$fileout" | grep -qiE "x86|Intel|80386|ELF 64-bit LSB shared object, x86-64"; then
+                  echo "[WARN] ld.lld binary arch mismatch: $fileout"
+                  echo "[INFO] Installing apt lld and switching to 'ld'"
+                  sudo apt-get install -y lld
+                  echo "LD=ld" >> $GITHUB_ENV
+                fi
+              fi
+            fi
+          fi
+
+      - name: Make build.sh executable
         run: |
           chmod +x build.sh
-          ./build.sh
 
-      - name: Upload Kernel Image
+      - name: Run build script
+        id: run_build
+        run: |
+          set -eux
+          # export useful vars for build script
+          export CC=${CC:-clang}
+          export LD=${LD:-ld.lld}
+          export AR=${AR:-llvm-ar}
+          export NM=${NM:-llvm-nm}
+          export OBJCOPY=${OBJCOPY:-llvm-objcopy}
+          export OBJDUMP=${OBJDUMP:-llvm-objdump}
+          export READELF=${READELF:-llvm-readelf}
+          export STRIP=${STRIP:-llvm-strip}
+          ./build.sh
+        env:
+          DEFCONFIG: gki_defconfig
+
+      - name: Upload kernel artifact (Image.gz) on success
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: kernel-image
           path: build/Image.gz
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            out/build.log
+            out/.config
+            out/arch/arm64/configs/gki_defconfig
