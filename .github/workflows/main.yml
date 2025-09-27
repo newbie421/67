@@ -11,11 +11,41 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Free Disk Space (Ubuntu)
-        if: ${{ false }} # Set ke true kalau storage kurang
+      - name: Free Disk Space (Ubuntu)  # optional
+        if: ${{ false }}
         uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: false
 
-      - name: Install Slim LLVM 21.1.2
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 7
+
+      - name: Include KernelSU-Next
+        run: |
+          cd $GITHUB_WORKSPACE
+          rm -rf KernelSU 2>/dev/null || true
+          if ! curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/main/kernel/setup.sh" | bash - ; then
+            curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -
+          fi
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git wget curl make gcc g++ bc bison flex \
+            libssl-dev libncurses5-dev libncursesw5-dev \
+            python3 unzip device-tree-compiler \
+            gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
+
+      - name: Download Slim LLVM 21.1.2 (x86_64)
         run: |
           mkdir -p $HOME/toolchains/llvm-21
           cd $HOME/toolchains/llvm-21
@@ -32,7 +62,18 @@ jobs:
           echo "READELF=llvm-readelf" >> $GITHUB_ENV
           echo "STRIP=llvm-strip" >> $GITHUB_ENV
 
-      - name: Build Kernel
+      - name: Run build script
         run: |
           chmod +x build.sh
           ./build.sh
+
+      - name: Compress kernel image
+        run: |
+          cd build
+          gzip -9 -c Image > Image.gz
+
+      - name: Upload Kernel Image
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-image
+          path: build/Image.gz
