@@ -14,10 +14,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set Swap Space (7 GB)
+      - name: Set Swap Space (14 GB)
         uses: pierotofy/set-swap-space@master
         with:
-          swap-size-gb: 7
+          swap-size-gb: 14
 
       - name: Install dependencies
         run: |
@@ -29,28 +29,16 @@ jobs:
             gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi \
             file xz-utils ca-certificates
 
-      - name: Download LLVM 21.1.2 (full x86_64)
-        id: download_llvm
+      - name: Download LLVM 21.1.2 (x86_64)
         run: |
-          set -eux
           mkdir -p $HOME/toolchains/llvm-21
           cd $HOME/toolchains/llvm-21
-          # gunakan build x86_64 (runner is x86_64)
-          URL=https://mirrors.edge.kernel.org/pub/tools/llvm/files/llvm-21.1.2-x86_64.tar.xz
-          echo "Downloading $URL"
-          curl -fSL "$URL" -o llvm-21.1.2-x86_64.tar.xz
+          curl -fSL https://mirrors.edge.kernel.org/pub/tools/llvm/files/llvm-21.1.2-x86_64.tar.xz -o llvm-21.1.2-x86_64.tar.xz
           tar -xJf llvm-21.1.2-x86_64.tar.xz --strip-components=1
-          # add to PATH for remaining steps
           echo "$HOME/toolchains/llvm-21/bin" >> $GITHUB_PATH
-          # also expose useful tools
           echo "CC=clang" >> $GITHUB_ENV
           echo "LD=ld.lld" >> $GITHUB_ENV
           echo "AR=llvm-ar" >> $GITHUB_ENV
-          echo "NM=llvm-nm" >> $GITHUB_ENV
-          echo "OBJCOPY=llvm-objcopy" >> $GITHUB_ENV
-          echo "OBJDUMP=llvm-objdump" >> $GITHUB_ENV
-          echo "READELF=llvm-readelf" >> $GITHUB_ENV
-          echo "STRIP=llvm-strip" >> $GITHUB_ENV
 
       - name: Toolchain diagnostics
         run: |
