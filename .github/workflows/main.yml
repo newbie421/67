@@ -45,23 +45,22 @@ jobs:
             libssl-dev libncurses5-dev libncursesw5-dev python3 unzip \
             device-tree-compiler gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
-      - name: Download Slim LLVM 21.1.2
-        run: |
-          mkdir -p $HOME/toolchains/llvm-21
-          cd $HOME/toolchains/llvm-21
-          curl -fLO https://mirrors.edge.kernel.org/pub/tools/llvm/files/llvm-21.1.2-aarch64.tar.gz
-          tar -xzf llvm-21.1.2-aarch64.tar.gz --strip-components=1
+      - name: Install Slim LLVM 21.1.2 (x86_64)
+  run: |
+    mkdir -p $HOME/toolchains/llvm-21
+    cd $HOME/toolchains/llvm-21
+    curl -LO https://mirrors.edge.kernel.org/pub/tools/llvm/files/llvm-21.1.2-x86_64.tar.gz
+    tar -xzf llvm-21.1.2-x86_64.tar.gz --strip-components=1
 
-          # expose toolchain to job
-          echo "PATH=$HOME/toolchains/llvm-21/bin:$PATH" >> $GITHUB_ENV
-          echo "CC=clang" >> $GITHUB_ENV
-          echo "LD=ld.lld" >> $GITHUB_ENV
-          echo "AR=llvm-ar" >> $GITHUB_ENV
-          echo "NM=llvm-nm" >> $GITHUB_ENV
-          echo "OBJCOPY=llvm-objcopy" >> $GITHUB_ENV
-          echo "OBJDUMP=llvm-objdump" >> $GITHUB_ENV
-          echo "READELF=llvm-readelf" >> $GITHUB_ENV
-          echo "STRIP=llvm-strip" >> $GITHUB_ENV
+    echo "PATH=$HOME/toolchains/llvm-21/bin:$PATH" >> $GITHUB_ENV
+    echo "CC=clang" >> $GITHUB_ENV
+    echo "LD=ld.lld" >> $GITHUB_ENV
+    echo "AR=llvm-ar" >> $GITHUB_ENV
+    echo "NM=llvm-nm" >> $GITHUB_ENV
+    echo "OBJCOPY=llvm-objcopy" >> $GITHUB_ENV
+    echo "OBJDUMP=llvm-objdump" >> $GITHUB_ENV
+    echo "READELF=llvm-readelf" >> $GITHUB_ENV
+    echo "STRIP=llvm-strip" >> $GITHUB_ENV
 
       - name: Run build script
         run: |
