@@ -49,11 +49,13 @@ build_kernel() {
     make -C "${KERNEL_ROOT}" O="${OUT_DIR}" ARCH=${ARCH} olddefconfig
 
     echo -e "\n[INFO] Building kernel Image...\n"
-    make -C "${KERNEL_ROOT}" O="${OUT_DIR}" \
-        ARCH=${ARCH} LLVM=1 LLVM_IAS=1 \
-        CROSS_COMPILE=${CROSS_COMPILE} CROSS_COMPILE_ARM32=${CROSS_COMPILE_ARM32} \
-        CC=${CC} LD=${LD} AR=${AR} NM=${NM} OBJCOPY=${OBJCOPY} OBJDUMP=${OBJDUMP} READELF=${READELF} STRIP=${STRIP} \
-        -j"$(nproc)" Image
+make -C "${KERNEL_ROOT}" O="${OUT_DIR}" \
+    ARCH=${ARCH} LLVM=1 LLVM_IAS=1 \
+    CROSS_COMPILE=${CROSS_COMPILE} CROSS_COMPILE_ARM32=${CROSS_COMPILE_ARM32} \
+    CC=${CC} LD=${LD} AR=${AR} NM=${NM} OBJCOPY=${OBJCOPY} OBJDUMP=${OBJDUMP} READELF=${READELF} STRIP=${STRIP} \
+    -j"$(nproc)" \
+    LD="${LD} -O0" \
+    Image
 
     if [[ -f "${OUT_DIR}/arch/arm64/boot/Image" ]]; then
         cp -v "${OUT_DIR}/arch/arm64/boot/Image" "${BUILD_DIR}/"
