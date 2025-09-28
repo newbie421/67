@@ -49,8 +49,8 @@ jobs:
         run: |
           mkdir -p $HOME/toolchains/llvm-21
           cd $HOME/toolchains/llvm-21
-          curl -fSL https://github.com/llvm/llvm-project/releases/download/llvmorg-21.1.2/LLVM-21.1.2-Linux-X64.tar.xz -o llvm.tar.xz
-          tar -xJf llvm.tar.xz --strip-components=1
+          curl -fSL https://github.com/llvm/llvm-project/releases/download/llvmorg-21.1.2/LLVM-21.1.2-Linux-X64.tar.xz -o llvm-21.1.2-x64.tar.xz
+          tar -xJf llvm-21.1.2-x64.tar.xz --strip-components=1
           echo "$HOME/toolchains/llvm-21/bin" >> $GITHUB_PATH
           echo "CC=clang" >> $GITHUB_ENV
           echo "LD=ld.lld" >> $GITHUB_ENV
