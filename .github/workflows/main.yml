@@ -47,14 +47,14 @@ jobs:
             python3 unzip device-tree-compiler \
             gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
-      - name: Download LLVM 21.1.2
+      - name: Download Clang toolchain
         run: |
           mkdir -p $HOME/toolchains
           cd $HOME/toolchains
-          wget -q https://github.com/llvm/llvm-project/releases/download/llvmorg-21.1.2/LLVM-21.1.2-Linux-X64.tar.xz
-          mkdir -p llvm-21
-          tar -xf LLVM-21.1.2-Linux-X64.tar.xz -C llvm-21 --strip-components=1
-          ls -l llvm-21/bin
+          wget -q https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/67af9f576276f27363074c4388e2cf0963bab6df/clang-r563880b.tar.gz
+          mkdir clang-r563880b
+          tar -xf clang-r563880b.tar.gz -C clang-r563880b
+          ls clang-r563880b/bin
 
       - name: Run build script
         run: |
