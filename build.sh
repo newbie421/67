@@ -13,11 +13,11 @@ export KBUILD_BUILD_USER="github-actions"
 export CLANG_DIR="${HOME}/toolchains/clang-r563880b"
 export PATH="${CLANG_DIR}/bin:${PATH}"
 
-# Clang + LLVM
-export LLVM=1
-export LLVM_IAS=1
-export CROSS_COMPILE=aarch64-linux-android-
-export CROSS_COMPILE_ARM32=arm-linux-androideabi-
+# cross compile
+export CROSS_COMPILE=aarch64-linux-gnu-
+export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+export CC=clang
+export LD=ld.lld
 
 # Create necessary directories
 mkdir -p "${KERNEL_ROOT}/out" "${KERNEL_ROOT}/build"
