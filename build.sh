@@ -24,14 +24,21 @@ mkdir -p "${KERNEL_ROOT}/out" "${KERNEL_ROOT}/build"
 
 build_kernel(){
     # defconfig
-    make -C ${KERNEL_ROOT} O=${KERNEL_ROOT}/out ARCH=arm64 gki_defconfig
+    make -C ${KERNEL_ROOT} O=${KERNEL_ROOT}/out \
+        ARCH=arm64 LLVM=1 LLVM_IAS=1 \
+        CROSS_COMPILE=${CROSS_COMPILE} \
+        CROSS_COMPILE_ARM32=${CROSS_COMPILE_ARM32} \
+        CC=${CC} -j$(nproc) gki_defconfig
 
-    # build kernel
-    make -C ${KERNEL_ROOT} O=${KERNEL_ROOT}/out ARCH=arm64 \
-        -j$(nproc) Image.gz-dtb || exit 1
+    # build Image
+    make -C ${KERNEL_ROOT} O=${KERNEL_ROOT}/out \
+        ARCH=arm64 LLVM=1 LLVM_IAS=1 \
+        CROSS_COMPILE=${CROSS_COMPILE} \
+        CROSS_COMPILE_ARM32=${CROSS_COMPILE_ARM32} \
+        CC=${CC} -j$(nproc) Image || exit 1
 
     # copy hasil
-    cp "${KERNEL_ROOT}/out/arch/arm64/boot/Image.gz-dtb" "${KERNEL_ROOT}/build"
+    cp "${KERNEL_ROOT}/out/arch/arm64/boot/Image" "${KERNEL_ROOT}/build"
 
     echo -e "\n[INFO]: BUILD FINISHED..!\n"
 }
