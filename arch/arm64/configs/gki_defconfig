@@ -760,4 +760,6 @@ CONFIG_VFAT_FS=y
 # CONFIG_CIFS is not set
 # CONFIG_ISO9660_FS is not set
 # CONFIG_NTFS_FS is not set
+# Disable perf num counters (fix implicit declaration)
+# CONFIG_ARM_PMU is not set
 
