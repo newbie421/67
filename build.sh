@@ -9,8 +9,8 @@ export KERNEL_ROOT="$(pwd)"
 export ARCH=arm64
 export KBUILD_BUILD_USER="github-actions"
 
-# toolchain LLVM 21.1.2 (downloaded via workflow)
-export CLANG_DIR="${HOME}/toolchains/llvm-21"
+# toolchain clang-r563880b (sudah di-download via workflow)
+export CLANG_DIR="${HOME}/toolchains/clang-r563880b"
 export PATH="${CLANG_DIR}/bin:${PATH}"
 
 # cross compile
