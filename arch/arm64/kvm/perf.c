@@ -50,16 +50,18 @@ static struct perf_guest_info_callbacks kvm_guest_cbs = {
 
 int kvm_perf_init(void)
 {
-	/*
-	 * Check if HW_PERF_EVENTS are supported by checking the number of
-	 * hardware performance counters. This could ensure the presence of
-	 * a physical PMU and CONFIG_PERF_EVENT is selected.
-	 */
-	if (IS_ENABLED(CONFIG_ARM_PMU) && perf_num_counters() > 0
-				       && !is_protected_kvm_enabled())
-		static_branch_enable(&kvm_arm_pmu_available);
+    /*
+     * Check if HW_PERF_EVENTS are supported by checking the number of
+     * hardware performance counters. This ensures that a physical PMU
+     * exists and CONFIG_PERF_EVENTS is enabled.
+     */
+#ifdef CONFIG_PERF_EVENTS
+    if (IS_ENABLED(CONFIG_ARM_PMU) && perf_num_hw_counters() > 0
+                                   && !is_protected_kvm_enabled())
+        static_branch_enable(&kvm_arm_pmu_available);
+#endif
 
-	return perf_register_guest_info_callbacks(&kvm_guest_cbs);
+    return perf_register_guest_info_callbacks(&kvm_guest_cbs);
 }
 
 int kvm_perf_teardown(void)
